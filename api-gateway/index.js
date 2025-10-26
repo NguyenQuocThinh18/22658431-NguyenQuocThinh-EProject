@@ -4,7 +4,7 @@ const httpProxy = require("http-proxy");
 const proxy = httpProxy.createProxyServer();
 const app = express();
 
-// Route requests to the auth service
+//  Route requests to the auth service
 app.use("/auth", (req, res) => {
   proxy.web(req, res, { target: "http://auth:3000" });
 });
