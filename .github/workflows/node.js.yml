@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  #-------- CI -------
+  # -------- CI --------
   test:
     runs-on: ubuntu-latest
     services:
@@ -20,6 +20,19 @@ jobs:
         ports:
           - 5672:5672
           - 15672:15672
+      auth:
+        build: ./auth
+        ports:
+          - 3000:3000
+        env:
+          MONGODB_AUTH_URI: mongodb://mongo:27017/auth_test
+          RABBITMQ_URL: amqp://rabbitmq:5672
+          JWT_SECRET: testsecret
+        options: >-
+          --health-cmd="curl --fail http://localhost:3000/health || exit 1"
+          --health-interval=10s
+          --health-retries=5
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,19 +41,16 @@ jobs:
 
       - name: Test Auth
         working-directory: ./auth
-        env:
-          MONGODB_AUTH_URI: mongodb://localhost:27017/auth_test
-          JWT_SECRET: testsecret
         run: npm install && npm test
 
       - name: Test Product
         working-directory: ./product
         env:
-          MONGODB_AUTH_URI: mongodb://localhost:27017/product_test
-          RABBITMQ_URL: amqp://localhost:5672
-          JWT_SECRET: testsecret 
+          MONGODB_PRODUCT_URI: mongodb://mongo:27017/product_test
+          RABBITMQ_URL: amqp://rabbitmq:5672
+          AUTH_URL: http://auth:3000
+          JWT_SECRET: testsecret
         run: npm install && npm test
-
 
   # -------- Build & Push Docker --------
   docker:
@@ -81,5 +91,3 @@ jobs:
           context: ./api-gateway
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/api-gateway:latest
-
- 
