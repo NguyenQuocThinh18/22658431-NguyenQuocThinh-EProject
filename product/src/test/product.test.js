@@ -29,7 +29,7 @@ describe("Products", () => {
     await app.stop();
   });
 
-  describe("POST /products", () => {
+  describe("POST /", () => {
     it("should create a new product", async () => {
       const product = {
         name: "Product 1",
@@ -39,7 +39,7 @@ describe("Products", () => {
 
       const res = await chai
         .request(app.app)
-        .post("/products")
+        .post("/") // ✅ sửa lại đúng route
         .set("Authorization", `Bearer ${authToken}`)
         .send(product);
 
@@ -55,7 +55,7 @@ describe("Products", () => {
 
       const res = await chai
         .request(app.app)
-        .post("/products")
+        .post("/") // ✅ sửa lại đúng route
         .set("Authorization", `Bearer ${authToken}`)
         .send(product);
 
