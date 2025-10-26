@@ -1,38 +1,32 @@
 const chai = require("chai");
 const chaiHttp = require("chai-http");
+const jwt = require("jsonwebtoken");
 const App = require("../app");
-const expect = chai.expect;
-require("dotenv").config();
+const { expect } = chai;
 
 chai.use(chaiHttp);
 
 describe("Products", () => {
   let app;
   let authToken;
-  const AUTH_URL = process.env.AUTH_URL || "http://localhost:3000";
 
-  before(async () => {
+  before(async function () {
+    this.timeout(30000);
     app = new App();
     await Promise.all([app.connectDB(), app.setupMessageBroker()]);
+    await app.start(3001);
 
-    // Authenticate with the auth microservice to get a token
-    const authRes = await chai
-      .request(AUTH_URL)
-      .post("/login")
-      .send({
-        username: process.env.LOGIN_TEST_USER,
-        password: process.env.LOGIN_TEST_PASSWORD,
-      });
-
-    authToken = authRes.body.token;
-    console.log("Auth token:", authToken);
-
-    app.start();
+    // Mock JWT token
+    authToken = jwt.sign(
+      { username: "testuser", role: "user" },
+      process.env.JWT_SECRET || "testsecret",
+      { expiresIn: "1h" }
+    );
   });
 
   after(async () => {
     await app.disconnectDB();
-    app.stop();
+    await app.stop();
   });
 
   describe("POST /products", () => {
@@ -42,9 +36,10 @@ describe("Products", () => {
         description: "Description of Product 1",
         price: 10,
       };
+
       const res = await chai
         .request(app.app)
-        .post("/")
+        .post("/products")
         .set("Authorization", `Bearer ${authToken}`)
         .send(product);
 
@@ -56,13 +51,11 @@ describe("Products", () => {
     });
 
     it("should return an error if name is missing", async () => {
-      const product = {
-        description: "Description of Product 1",
-        price: 10.99,
-      };
+      const product = { description: "No name", price: 10.99 };
+
       const res = await chai
         .request(app.app)
-        .post("/")
+        .post("/products")
         .set("Authorization", `Bearer ${authToken}`)
         .send(product);
 
