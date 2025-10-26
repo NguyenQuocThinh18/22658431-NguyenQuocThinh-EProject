@@ -109,7 +109,7 @@ class ProductController {
       res.status(500).json({ message: "Server error" });
     }
   }
-/*async getProductById(req, res, next) {
+async getProductById(req, res, next) {
   try {
     const token = req.headers.authorization;
     if (!token) {
@@ -128,7 +128,7 @@ class ProductController {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
-}*/
+}
 }
 
 module.exports = ProductController;
